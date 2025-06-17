@@ -38,7 +38,7 @@
                 android:paddingStart="5dp"
                 android:id="@+id/tv_currency"
                 tools:text="KGS"
-                android:textColor="#ff9518"
+                android:textColor="@color/orange"
                 android:textSize="16sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

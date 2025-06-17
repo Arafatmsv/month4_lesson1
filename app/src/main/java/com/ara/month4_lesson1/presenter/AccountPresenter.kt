@@ -1,58 +1,47 @@
 package com.ara.month4_lesson1.presenter
 
+import com.ara.month4_lesson1.data.api.ApiClient
+import com.ara.month4_lesson1.data.model.AccountErrorType
 import com.ara.month4_lesson1.data.model.AccountModel
+import com.ara.month4_lesson1.data.model.errorMessage
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class AccountPresenter(val view: AccountContract.View): AccountContract.Presenter {
     override fun loadAccounts() {
-        val testAccountList = listOf(
-            AccountModel(
-                id = "1",
-                name = "M-bank",
-                balance = 1527,
-                currency = "KGS",
-                isActive = true
-            ),
-
-            AccountModel(
-                id = "2",
-                name = "Optima bank",
-                balance = 34566,
-                currency = "KGS",
-                isActive = true
-            ),
-
-            AccountModel(
-                id = "3",
-                name = "Ayil bank",
-                balance = 500,
-                currency = "USD",
-                isActive = true
-            ),
-
-            AccountModel(
-                id = "4",
-                name = "Bakai bank",
-                balance = 100000,
-                currency = "KGS",
-                isActive = true
-            ),
-
-            AccountModel(
-                id = "5",
-                name = "T-bank",
-                balance = 5000,
-                currency = "RUB",
-                isActive = true
-            ),
-
-            AccountModel(
-                id = "6",
-                name = "0!bank",
-                balance = 12345,
-                currency = "KGS",
-                isActive = true
-            )
+        ApiClient.accountApi.getAccounts().handleResponse(
+            onSuccess = {view.showAccounts(it)},
+            onError = {view.showError(AccountErrorType.ACCOUNT_FETCH_ERROR.errorMessage(it))}
         )
-        view.showAccounts(testAccountList)
     }
+
+    override fun addAccount(accountModel: AccountModel) {
+        ApiClient.accountApi.createAccount(accountModel).handleResponse(
+            onSuccess = {loadAccounts()},
+            onError = {view.showError(AccountErrorType.ACCOUNT_ADD_ERROR.errorMessage(it))}
+        )
+    }
+
+    fun <T> Call <T>.handleResponse(
+        onSuccess: (T) -> Unit,
+        onError: (String) -> Unit = {}
+    ) {
+        enqueue(object: Callback<T> {
+            override fun onResponse(call: Call<T>, response: Response<T>) {
+                if (response.isSuccessful && response.body() != null) {
+                    onSuccess(response.body()!!)
+                } else {
+                    onError(response.code().toString())
+                }
+            }
+
+            override fun onFailure(call: Call<T>, t: Throwable) {
+                onError("${AccountErrorType.NETWORK_ERROR}: ${t.message}")
+            }
+
+
+        })
+    }
+
 }
