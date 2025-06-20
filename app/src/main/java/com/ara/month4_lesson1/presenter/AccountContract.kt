@@ -7,11 +7,15 @@ interface AccountContract {
     interface View {
         fun showAccounts(accounts: List<AccountModel >)
         fun showError(message: String)
+        fun showSuccess(message: String)
     }
 
     interface Presenter {
         fun loadAccounts()
         fun addAccount(accountModel: AccountModel)
+        fun updateAccount(accountModel: AccountModel)
+        fun patchAccountStatus(id: String, isActive: Boolean)
+        fun deleteAccount(id: String)
     }
 
 }

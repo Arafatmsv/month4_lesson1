@@ -1,9 +1,11 @@
 package com.ara.month4_lesson1.presenter
 
 import com.ara.month4_lesson1.data.api.ApiClient
-import com.ara.month4_lesson1.data.model.AccountErrorType
+import com.ara.month4_lesson1.data.model.message.AccountErrorType
 import com.ara.month4_lesson1.data.model.AccountModel
-import com.ara.month4_lesson1.data.model.errorMessage
+import com.ara.month4_lesson1.data.model.AccountStatusPatch
+import com.ara.month4_lesson1.data.model.message.AccountSuccessType
+import com.ara.month4_lesson1.data.model.message.errorMessage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -20,6 +22,33 @@ class AccountPresenter(val view: AccountContract.View): AccountContract.Presente
         ApiClient.accountApi.createAccount(accountModel).handleResponse(
             onSuccess = {loadAccounts()},
             onError = {view.showError(AccountErrorType.ACCOUNT_ADD_ERROR.errorMessage(it))}
+        )
+    }
+
+    override fun updateAccount(accountModel: AccountModel) {
+        ApiClient.accountApi.updateAccountFully(
+            id = accountModel.accountId!!,
+            accountModel = accountModel
+        ).handleResponse(
+            onSuccess = {
+                view.showSuccess(AccountSuccessType.ACCOUNT_CHANGE_SUCCESS.message)
+                loadAccounts() },
+        )
+    }
+
+    override fun patchAccountStatus(id: String, isActive: Boolean) {
+        ApiClient.accountApi.patchAccountStatus(id, AccountStatusPatch(isActive)).handleResponse(
+            onSuccess = {
+                view.showSuccess(AccountSuccessType.ACCOUNT_STATUS_SUCCESS.message)
+                loadAccounts() }
+        )
+    }
+
+    override fun deleteAccount(id: String) {
+        ApiClient.accountApi.accountDelete(id).handleResponse(
+            onSuccess = {
+                view.showSuccess(AccountSuccessType.ACCOUNT_DELETE_SUCCESS.message)
+                loadAccounts() }
         )
     }
 
