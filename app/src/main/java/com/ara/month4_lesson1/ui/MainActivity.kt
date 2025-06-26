@@ -1,5 +1,6 @@
 package com.ara.month4_lesson1.ui
 
+
 import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -7,25 +8,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.viewbinding.ViewBinding
-import com.ara.month4_lesson1.R
 import com.ara.month4_lesson1.data.model.AccountModel
 import com.ara.month4_lesson1.databinding.ActivityMainBinding
 import com.ara.month4_lesson1.databinding.ItemDialogBinding
-import com.ara.month4_lesson1.presenter.AccountContract
-import com.ara.month4_lesson1.presenter.AccountPresenter
+import com.ara.month4_lesson1.viewModel.AccountViewModel
 import com.ara.month4_lesson1.ui.adapter.AccountAdapter
 
-class MainActivity : AppCompatActivity(), AccountContract.View {
+class MainActivity : AppCompatActivity(){
 
-    private lateinit var presenter: AccountContract.Presenter
     private lateinit var binding: ActivityMainBinding
     private lateinit var accountAdapter: AccountAdapter
+    private val viewModel: AccountViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,27 +30,41 @@ class MainActivity : AppCompatActivity(), AccountContract.View {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        presenter = AccountPresenter(view = this)
 
         initAdapter()
         initClicks()
-        presenter.loadAccounts()
+        viewModel.loadAccounts()
+        subscribeToLiveData()
 
 
+    }
+
+    private fun subscribeToLiveData() {
+        viewModel.accounts.observe(this) {
+            accountAdapter.setItems(it)
+        }
+
+        viewModel.errorMessage.observe(this) {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+        }
+
+        viewModel.successMessage.observe(this) {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun initAdapter() {
         accountAdapter = AccountAdapter(
             onEdit = {
-                showAccountDialog(it) { editAccount -> presenter.updateAccount(editAccount)  }
+                showAccountDialog(it) { editAccount -> viewModel.updateAccount(editAccount)  }
             },
 
             onStatusToogle = { id, isChecked ->
-                presenter.patchAccountStatus(id, isChecked)
+                viewModel.patchAccountStatus(id, isChecked)
             },
 
             onDelete = {
-                presenter.deleteAccount(it)
+                viewModel.deleteAccount(it)
             }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -64,7 +74,7 @@ class MainActivity : AppCompatActivity(), AccountContract.View {
     private fun initClicks(){
         with(binding){
             btnAdd.setOnClickListener {
-                showAccountDialog { presenter.addAccount(it)  }
+                showAccountDialog { viewModel.addAccount(it)  }
             }
         }
     }
@@ -96,12 +106,8 @@ class MainActivity : AppCompatActivity(), AccountContract.View {
                 val name = dialogVB.etName.text.toString()
                 val balance = dialogVB.etBalance.text.toString().toInt()
                 val currency = dialogVB.etCurrency.text.toString()
-                val newAccountModel = accountModel?.copy(
-                    name = name,
-                    balance = balance,
-                    currency = currency,
-                    isActive = true
-                ) ?: AccountModel(
+                val newAccountModel = AccountModel(
+                    accountId = accountModel?.accountId,
                     name = name,
                     balance = balance,
                     currency = currency,
@@ -119,19 +125,6 @@ class MainActivity : AppCompatActivity(), AccountContract.View {
 
             dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
-    }
-
-
-    override fun showAccounts(accounts: List<AccountModel>) {
-        accountAdapter.setItems(accounts)
-    }
-
-    override fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun showSuccess(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
 

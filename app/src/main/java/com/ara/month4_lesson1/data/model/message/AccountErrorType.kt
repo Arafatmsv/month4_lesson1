@@ -6,7 +6,3 @@ enum class AccountErrorType(val message: String) {
     NETWORK_ERROR("Ошибка сети")
 
 }
-
-fun AccountErrorType.errorMessage(msg: String): String {
-    return "$this: $msg"
-}
