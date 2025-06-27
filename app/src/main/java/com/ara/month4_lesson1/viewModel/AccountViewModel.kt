@@ -3,16 +3,20 @@ package com.ara.month4_lesson1.viewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.ara.month4_lesson1.data.api.ApiClient
+import com.ara.month4_lesson1.data.api.AccountApi
+import com.ara.month4_lesson1.di.NetworkModule
 import com.ara.month4_lesson1.data.model.message.AccountErrorType
 import com.ara.month4_lesson1.data.model.AccountModel
 import com.ara.month4_lesson1.data.model.AccountStatusPatch
 import com.ara.month4_lesson1.data.model.message.AccountSuccessType
+import dagger.hilt.android.lifecycle.HiltViewModel
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import javax.inject.Inject
 
-class AccountViewModel:ViewModel() {
+@HiltViewModel
+class AccountViewModel @Inject constructor(private val accountApi: AccountApi): ViewModel() {
 
     private val _accounts = MutableLiveData<List<AccountModel>>()
     val accounts: LiveData<List<AccountModel>> = _accounts
@@ -24,21 +28,21 @@ class AccountViewModel:ViewModel() {
     val successMessage: LiveData<AccountSuccessType> = _successMessage
 
     fun loadAccounts() {
-        ApiClient.accountApi.getAccounts().handleResponse(
+        accountApi.getAccounts().handleResponse(
             onSuccess = { _accounts.value = it },
             onError = { _errorMessage.value = AccountErrorType.ACCOUNT_FETCH_ERROR }
         )
     }
 
     fun addAccount(accountModel: AccountModel) {
-        ApiClient.accountApi.createAccount(accountModel).handleResponse(
+        accountApi.createAccount(accountModel).handleResponse(
             onSuccess = {loadAccounts()},
             onError = {_errorMessage.value = AccountErrorType.ACCOUNT_ADD_ERROR}
         )
     }
 
     fun updateAccount(accountModel: AccountModel) {
-        ApiClient.accountApi.updateAccountFully(
+        accountApi.updateAccountFully(
             id = accountModel.accountId!!,
             accountModel = accountModel
         ).handleResponse(
@@ -49,7 +53,7 @@ class AccountViewModel:ViewModel() {
     }
 
     fun patchAccountStatus(id: String, isActive: Boolean) {
-        ApiClient.accountApi.patchAccountStatus(id, AccountStatusPatch(isActive)).handleResponse(
+        accountApi.patchAccountStatus(id, AccountStatusPatch(isActive)).handleResponse(
             onSuccess = {
                 _successMessage.value = AccountSuccessType.ACCOUNT_STATUS_SUCCESS
                 loadAccounts() }
@@ -57,7 +61,7 @@ class AccountViewModel:ViewModel() {
     }
 
     fun deleteAccount(id: String) {
-        ApiClient.accountApi.accountDelete(id).handleResponse(
+        accountApi.accountDelete(id).handleResponse(
             onSuccess = {
                 _successMessage.value = AccountSuccessType.ACCOUNT_DELETE_SUCCESS
                 loadAccounts() }

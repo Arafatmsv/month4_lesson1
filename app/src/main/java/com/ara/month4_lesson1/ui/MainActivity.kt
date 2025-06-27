@@ -16,7 +16,9 @@ import com.ara.month4_lesson1.databinding.ActivityMainBinding
 import com.ara.month4_lesson1.databinding.ItemDialogBinding
 import com.ara.month4_lesson1.viewModel.AccountViewModel
 import com.ara.month4_lesson1.ui.adapter.AccountAdapter
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(){
 
     private lateinit var binding: ActivityMainBinding
